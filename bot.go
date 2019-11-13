@@ -26,36 +26,4 @@ func main() {
 
 	ws.SubscribeDepth("ethusdt")
 	<-channel
-
-	//t := Test{
-	//	closeChan: make(chan struct{}, 1),
-	//	recvChan:  make(chan struct{}, 1),
-	//}
-	//t.closeTest()
-
-}
-
-type Test struct {
-	closeChan chan struct{}
-	recvChan  chan struct{}
-}
-
-func (t *Test) closeTest() {
-	t.cleanChan(t.closeChan)
-	t.cleanChan(t.recvChan)
-	t.closeChan <- struct{}{}
-	t.recvChan <- struct{}{}
-
-}
-
-func (t *Test) cleanChan(c chan struct{}) {
-	for {
-		if len(c) > 0 {
-			data := <-c
-			fmt.Println("通道读取数据: ", data)
-		} else {
-			fmt.Println("没有收到数据")
-			break
-		}
-	}
 }
