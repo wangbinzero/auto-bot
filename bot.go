@@ -15,16 +15,16 @@ func main() {
 	ws.SetFollow(0.0001)
 	ws.SetCallbacks(func(response *client.DepthResponse) {
 		if len(response.Asks) > 0 {
-			log.Println("深度   ------------   卖 :", response.Asks[0][0]*ws.Rate)
+			log.Println("深度   ------------   卖 :", response.Asks[0])
 		}
 
 		if len(response.Bids) > 0 {
-			log.Println("深度   ------------   买 :", response.Bids[0][0]*ws.Rate)
+			log.Println("深度   ------------   买 :", response.Bids[0])
 		}
 
 	})
 
-	ws.SubscribeDepth("btcusdt")
+	ws.SubscribeDepth("ethusdt")
 	<-channel
 
 	//t := Test{
