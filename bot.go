@@ -23,9 +23,13 @@ func main() {
 			log.Println("深度   ------------   买 :", response.Bids[0])
 		}
 
-	})
+	}, func(response *client.KlineResponse) {
+		log.Println("K线数据", response)
+	}, nil)
 
+	ws.SubscribeKline("btcusdt")
 	ws.SubscribeDepth("btcusdt")
+	//ws.SubscribeDepth("ethusdt")
 	go serve.New().Listen()
 	<-channel
 

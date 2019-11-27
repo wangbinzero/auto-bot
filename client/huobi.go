@@ -23,14 +23,30 @@ type DepthResponse struct {
 	Asks [][]float64
 }
 
+type KlineResponse struct {
+	Id     int     `json:"id"`
+	Amount float64 `json:"amount"`
+	Count  int     `json:"count"`
+	Open   float64 `json:"open"`
+	Close  float64 `json:"close"`
+	Low    float64 `json:"low"`
+	High   float64 `json:"high"`
+	Vol    float64 `json:"vol"`
+}
+
+type DetailResponse struct {
+}
+
 //火币客户端
 type HClient struct {
 	*WsBuilder
 	sync.Once
-	wsConn        *WsCon
-	depthCallback func(*DepthResponse)
-	Follow        bool
-	Rate          float64
+	wsConn         *WsCon
+	depthCallback  func(*DepthResponse)  //深度回调函数
+	klineCallback  func(*KlineResponse)  //K线回调函数
+	detailCallback func(*DetailResponse) //最新成交回调函数
+	Follow         bool
+	Rate           float64
 }
 
 //初始化火币客户端
@@ -70,14 +86,20 @@ func (hc *HClient) protocolHandle(data []byte) error {
 		return err
 	}
 
-	var depthRes DepthResponse
-	json.Unmarshal(res.Tick, &depthRes)
-	hc.depthCallback(&depthRes)
+	if strings.Contains(res.Ch, "kline") {
+		var klineRes KlineResponse
+		json.Unmarshal(res.Tick, &klineRes)
 
+		hc.klineCallback(&klineRes)
+	} else if strings.Contains(res.Ch, "depth") {
+		var depthRes DepthResponse
+		json.Unmarshal(res.Tick, &depthRes)
+		hc.depthCallback(&depthRes)
+	}
 	return nil
 }
 
-//******************************订阅***************************************//
+// 订阅深度
 func (hc *HClient) SubscribeDepth(symbol string) error {
 	if hc.depthCallback == nil {
 		return errors.New("请设置深度回调事件")
@@ -85,6 +107,29 @@ func (hc *HClient) SubscribeDepth(symbol string) error {
 	return hc.subscribe(map[string]interface{}{
 		"id":  "client1",
 		"sub": fmt.Sprintf("market.%s.depth.step1", symbol),
+	})
+}
+
+// 订阅K线
+func (hc *HClient) SubscribeKline(symbol string) error {
+	if hc.klineCallback == nil {
+		return errors.New("请设置K线回调事件")
+	}
+
+	return hc.subscribe(map[string]interface{}{
+		"id":  "client1",
+		"sub": fmt.Sprintf("market.%s.kline.1min", symbol),
+	})
+}
+
+// 订阅成交详情
+func (hc *HClient) SubscribeDetail(symbol string) error {
+	if hc.detailCallback == nil {
+		return errors.New("请设置详情回调事件")
+	}
+	return hc.subscribe(map[string]interface{}{
+		"id":  "client1",
+		"sub": fmt.Sprintf("market.%s.detail", symbol),
 	})
 }
 
@@ -102,8 +147,10 @@ func (hc *HClient) connectWs() {
 }
 
 //深度回调
-func (hc *HClient) SetCallbacks(depthCallback func(*DepthResponse)) {
+func (hc *HClient) SetCallbacks(depthCallback func(*DepthResponse), klineCallback func(*KlineResponse), detailCallback func(*DetailResponse)) {
 	hc.depthCallback = depthCallback
+	hc.klineCallback = klineCallback
+	hc.detailCallback = detailCallback
 }
 
 func (hc *HClient) SetFollow(rate float64) {

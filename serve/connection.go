@@ -38,7 +38,7 @@ func (c *Connection) OnConnect(uuid string) {
 		if err != nil {
 			fmt.Sprintf("read message error %v\n", err)
 		}
-		fmt.Printf("read message : %s\n", string(data))
+		MsgHandler(data)
 	}
 
 }
