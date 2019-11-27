@@ -3,6 +3,7 @@ package main
 import (
 	"auto-bot/client"
 	"auto-bot/common"
+	"auto-bot/serve"
 	"fmt"
 	"log"
 )
@@ -24,6 +25,8 @@ func main() {
 
 	})
 
-	ws.SubscribeDepth("ethusdt")
+	ws.SubscribeDepth("btcusdt")
+	go serve.New().Listen()
 	<-channel
+
 }

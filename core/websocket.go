@@ -145,7 +145,7 @@ func (ws *WsCon) connect() {
 	dialer := websocket.DefaultDialer
 	if ws.ProxyUrl != "" {
 		proxy, err := url.Parse(ws.ProxyUrl)
-		if err != nil {
+		if err == nil {
 			fmt.Println("代理地址为:", proxy)
 			dialer.Proxy = http.ProxyURL(proxy)
 		} else {

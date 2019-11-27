@@ -37,14 +37,14 @@ type HClient struct {
 func NewClient() *HClient {
 	hclient := &HClient{WsBuilder: NewWs()}
 	hclient.WsBuilder.
-		SetWsUrl("wss://api.hadax.com/ws").
+		SetWsUrl("wss://api.huobi.pro/ws").
 		SetErrorHandle(func(err error) {
 			log.Println("火币异常处理器", err)
 
 		}).
 		SetReconnectIntervalTime(20 * time.Minute).
 		SetUnCompressFunc(common.GzipUnCompress).
-		SetProtoHandleFunc(hclient.protocolHandle)
+		SetProtoHandleFunc(hclient.protocolHandle).SetProxyUrl("socks5://127.0.0.1:1086")
 	return hclient
 }
 
