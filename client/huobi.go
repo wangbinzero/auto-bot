@@ -118,7 +118,7 @@ func (hc *HClient) SubscribeKline(symbol string) error {
 
 	return hc.subscribe(map[string]interface{}{
 		"id":  "client1",
-		"sub": fmt.Sprintf("market.%s.kline.1min", symbol),
+		"sub": fmt.Sprintf("market.%s.kline.1day", symbol),
 	})
 }
 

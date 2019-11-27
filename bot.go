@@ -4,6 +4,7 @@ import (
 	"auto-bot/client"
 	"auto-bot/common"
 	"auto-bot/serve"
+	"encoding/json"
 	"fmt"
 	"log"
 )
@@ -24,6 +25,11 @@ func main() {
 		}
 
 	}, func(response *client.KlineResponse) {
+		for _, v := range serve.ConnPool {
+			d, _ := json.Marshal(response)
+
+			v.WriteMessage(d)
+		}
 		log.Println("K线数据", response)
 	}, nil)
 
