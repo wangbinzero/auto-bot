@@ -1,0 +1,23 @@
+connect:
+  host: 127.0.0.1
+  port: 5672
+  username: guest
+  password: guest
+  vhost: /
+
+exchange:
+  default:
+    key: bot.default
+    type: direct
+  kline:
+    key: bot.kline
+    type: direct
+  ticker:
+    key: bot.ticker
+    type: direct
+
+queue:
+  kline:
+    key: bot.queue.kline
+  ticker:
+    key: bot.queue.ticker
