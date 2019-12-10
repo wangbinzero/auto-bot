@@ -22,27 +22,31 @@ type binanceClient struct {
 	klineCallback func(*BinanceKlineResponse)
 
 	//成交明细回调事件
-	detailCallback func(*BinanceDetailResponse)
+	tickerCallback func(*BinanceTickerResponse)
 }
 
-// 创建币安客户端
+// create binance client
 func NewBinance() *binanceClient {
 	baClient := &binanceClient{WsBuilder: core.NewWs()}
+
 	baClient.WsBuilder.
 		SetWsUrl("wss://stream.binance.com:9443/ws").
 		SetErrorHandle(baClient.errorHandle).
 		SetProtoHandleFunc(baClient.protocolHandle)
+
 	return baClient
 }
 
+// connected to binance websocket.
 func (c *binanceClient) connectWs() {
+
 	c.Do(func() {
 		c.wsConn = c.WsBuilder.Build()
 		c.wsConn.ReceiveMessage()
 	})
 }
 
-// 消息协议处理
+// this func handle message for binance ws
 func (ba *binanceClient) protocolHandle(data []byte) error {
 	str := string(data)
 	if strings.Contains(str, "ping") {
@@ -58,9 +62,9 @@ func (ba *binanceClient) protocolHandle(data []byte) error {
 			json.Unmarshal(data, &klineRes)
 			ba.klineCallback(&klineRes)
 		case "24hrTicker":
-			var detailRes BinanceDetailResponse
+			var detailRes BinanceTickerResponse
 			json.Unmarshal(data, &detailRes)
-			ba.detailCallback(&detailRes)
+			ba.tickerCallback(&detailRes)
 		case "depthUpdate":
 			var depthRes BinanceDepthResponse
 			json.Unmarshal(data, &depthRes)
@@ -70,7 +74,7 @@ func (ba *binanceClient) protocolHandle(data []byte) error {
 	return nil
 }
 
-// 币安深度订阅
+// subscribe depth response data
 func (ba *binanceClient) SubscribeDepth(symbol []string) error {
 
 	return ba.subscribe(map[string]interface{}{
@@ -80,8 +84,8 @@ func (ba *binanceClient) SubscribeDepth(symbol []string) error {
 	})
 }
 
-// 币安详情订阅
-func (ba *binanceClient) SubscribeDetail(symbol []string) error {
+// subscribe ticker response data
+func (ba *binanceClient) SubscribeTicker(symbol []string) error {
 	return ba.subscribe(map[string]interface{}{
 		"method": "SUBSCRIBE",
 		"params": symbol,
@@ -89,7 +93,7 @@ func (ba *binanceClient) SubscribeDetail(symbol []string) error {
 	})
 }
 
-// K线订阅
+// subscribe kline response data
 func (ba *binanceClient) SubscribeKline(symbol []string) error {
 
 	if ba.klineCallback == nil {
@@ -116,17 +120,31 @@ func (ba *binanceClient) SubscribeKline(symbol []string) error {
 	})
 }
 
+// the main func for subscribe
 func (ba *binanceClient) subscribe(data map[string]interface{}) error {
-	fmt.Println("订阅交易对:", data)
+	fmt.Println("start subscribe symbol by binance")
 	ba.connectWs()
 	return ba.wsConn.Subscribe(data)
 }
 
-// 异常处理器
+// error handler
 func (ba *binanceClient) errorHandle(err error) {
 	fmt.Println("币安异常信息:", err)
 }
 
-func (ba *binanceClient) SetCallbacks(kline func(response *BinanceDepthResponse)) {
+// Setting callback func
+func (ba *binanceClient) SetCallbacks(kline func(*BinanceKlineResponse), depth func(*BinanceDepthResponse), ticker func(*BinanceTickerResponse)) {
+	ba.depthCallback = depth
+	ba.klineCallback = kline
+	ba.tickerCallback = ticker
+}
 
+func BinanceRun() {
+	client := NewBinance()
+	client.SetProxyUrl("socks5://127.0.0.1:1080")
+	//binance.SubscribeDepth("btcusdt")
+	client.SetCallbacks(func(response *BinanceKlineResponse) {
+		fmt.Println("Binance [kline] - : ", response.Kline.Close, response.Kline.Low)
+	}, nil, nil)
+	client.SubscribeKline([]string{"btcusdt", "eosusdt", "bchusdt"})
 }

@@ -8,9 +8,9 @@ type BinanceBaseResponse struct {
 }
 
 // Binance detail response
-type BinanceDetailResponse struct {
+type BinanceTickerResponse struct {
 	BinanceBaseResponse
-	BinanceDetail
+	BinanceTicker
 }
 
 // Binance kline response
@@ -32,7 +32,7 @@ type BinanceDepth struct {
 	Asks          [][]string `json:"a"` //变动的卖单深度
 }
 
-type BinanceDetail struct {
+type BinanceTicker struct {
 	Close  string `json:"c"` //最新成交价格
 	Open   string `json:"o"` //24小时前开始第一笔成交价格
 	High   string `json:"h"` //24小时内最高成交价
