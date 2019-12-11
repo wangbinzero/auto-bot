@@ -16,7 +16,7 @@ type Amqp struct {
 		Port     string `yaml:"port"`
 		UserName string `yaml:"username"`
 		Password string `yaml:"password"`
-	} `yaml:"content"`
+	} `yaml:"connect"`
 
 	Exchange struct {
 		Default map[string]string `yaml:"default"`
@@ -37,7 +37,7 @@ var (
 
 // initialize RabbitMQ config
 func InitAmqpConfig() {
-	path, _ := filepath.Abs("/config/amqp.yml")
+	path, _ := filepath.Abs("./config/amqp.yaml")
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
@@ -61,6 +61,8 @@ func InitAmqpConn() {
 		AmqpGlobalConfig.Connect.Port + "/")
 
 	if err != nil {
+		fmt.Println(AmqpGlobalConfig)
+		fmt.Println(err)
 		time.Sleep(5000)
 		InitAmqpConn()
 		return
@@ -70,6 +72,9 @@ func InitAmqpConn() {
 		<-RabbitMqConnect.NotifyClose(make(chan *amqp.Error))
 		InitAmqpConn()
 	}()
+
+	//declare exchange
+	DeclareExchange()
 }
 
 // publish message to RabbitMQ
@@ -161,10 +166,12 @@ func DeclareQueue(channel *amqp.Channel) error {
 		return fmt.Errorf("declare queue ticker error: %s", err)
 	}
 	fmt.Printf("declare queue [%s] success\n", AmqpGlobalConfig.Queue.Ticker["key"])
-
+	BindQueue(channel)
 	return nil
 }
 
+//  bind queue with exchange by routeKey
 func BindQueue(channel *amqp.Channel) {
-	channel.QueueBind()
+	channel.QueueBind(AmqpGlobalConfig.Queue.Kline["key"], "kline", AmqpGlobalConfig.Exchange.Kline["key"], false, nil)
+	channel.QueueBind(AmqpGlobalConfig.Queue.Ticker["key"], "ticker", AmqpGlobalConfig.Exchange.Ticker["key"], false, nil)
 }
